@@ -31,11 +31,16 @@ def migrate_contact(uuid,flow=None):
         for var in VARIABLES:
             fields_to_migrate[var] = contact["fields"][var]
         groups = [g["name"] for g in contact["groups"] if g["name"] in VALID_GROUPS]
-        mx_contact = mx_client.create_contact( name = contact["name"],
-                                  urns = contact["urns"],
-                                  fields = fields_to_migrate,
-                                  groups = groups
-                                )
+        try:
+            mx_contact = mx_client.create_contact( name = contact["name"],
+                                                   urns = contact["urns"],
+                                                   fields = fields_to_migrate,
+                                                   groups = groups
+                                                  )
+        except:
+            mx_contacts = mx_client.get_contacts(urn=contact["urns"]).all()
+            if mx_contacts:
+                mx_contact = mx_contacts[0]        
         if flow:
             mx_client.create_flow_start(flow=flow, contacts=[mx_contact.uuid],)
 
