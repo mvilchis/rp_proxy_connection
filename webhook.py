@@ -11,7 +11,7 @@ import json
 TOKEN_IO=os.getenv('TOKEN_IO', "")
 TOKEN_MX=os.getenv('TOKEN_MX', "")
 VARIABLES=["rp_mialta_started", "rp_miprueba_mialta", "rp_mialta_initms", "rp_mialta_counter", "rp_name", "rp_ispregnant", "rp_prestadorss", "rp_duedate", "rp_deliverydate"]
-VALID_GROUPS= [ "MIALTA", "ALL", "NOT3", "ALTOPD", "PREGNANT", "SE_T_Pregnancy", "PUERPERIUM", "SE_T_Baby"]
+VALID_GROUPS= [ "MIALTA", "ALL", "NOT3", "ALTOPD", "PREGNANT", "SE_T_Pregnancy", "PUERPERIUM", "SE_T_Baby","PUERPERIUM_MS","PREGNANT_MS"]
 
 # Cliente io
 io_client = TembaClient('rapidpro.io',TOKEN_IO)
