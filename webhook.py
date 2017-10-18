@@ -11,7 +11,8 @@ import json
 TOKEN_IO=os.getenv('TOKEN_IO', "")
 TOKEN_MX=os.getenv('TOKEN_MX', "")
 VARIABLES=["rp_mialta_started", "rp_miprueba_mialta", "rp_mialta_initms", "rp_mialta_counter", "rp_name", "rp_ispregnant", "rp_prestadorss", "rp_duedate", "rp_deliverydate"]
-VALID_GROUPS= [ "MIALTA", "ALL", "NOT3", "ALTOPD", "PREGNANT", "SE_T_Pregnancy", "PUERPERIUM", "SE_T_Baby","PUERPERIUM_MS","PREGNANT_MS"]
+VALID_GROUPS= ["ALL" ,"ALTA_REPEAT" ,"ALTOPD" ,"MIALERTA" ,"MIALTA" ,"MISCARRIAGE" ,"Muerte" ,"PERSONAL_SALUD" ,"PREGNANT" ,"PREGNANT_MS" ,"PREMATURO" ,"PUERPERIUM" ,"PUERPERIUM_MS" ,"SE_C_Baby" ,"SE_C_Pregnancy" ,"SE_T_Baby" ,"SE_T_Pregnancy" ,"spillovers" ,"T3" ,"UNCAUGHT"]
+
 
 # Cliente io
 io_client = TembaClient('rapidpro.io',TOKEN_IO)
@@ -40,7 +41,7 @@ def migrate_contact(uuid,flow=None):
         except:
             mx_contacts = mx_client.get_contacts(urn=contact["urns"]).all()
             if mx_contacts:
-                mx_contact = mx_contacts[0]        
+                mx_contact = mx_contacts[0]
         if flow:
             mx_client.create_flow_start(flow=flow, contacts=[mx_contact.uuid],)
 
