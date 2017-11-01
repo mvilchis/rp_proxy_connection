@@ -1,6 +1,5 @@
 from flask import request, url_for
 from flask_api import FlaskAPI, status, exceptions
-from utils import *
 import os
 import ast
 from flask import jsonify
@@ -10,18 +9,15 @@ import json
 
 TOKEN_IO=os.getenv('TOKEN_IO', "")
 TOKEN_MX=os.getenv('TOKEN_MX', "")
-VARIABLES=["rp_mialta_started", "rp_miprueba_mialta", "rp_mialta_initms", "rp_mialta_counter", "rp_name", "rp_ispregnant", "rp_prestadorss", "rp_duedate", "rp_deliverydate"]
-VALID_GROUPS= ["ALL" ,"ALTA_REPEAT" ,"ALTOPD" ,"MIALERTA" ,"MIALTA" ,"MISCARRIAGE" ,"Muerte" ,"PERSONAL_SALUD" ,"PREGNANT" ,"PREGNANT_MS" ,"PREMATURO" ,"PUERPERIUM" ,"PUERPERIUM_MS" ,"SE_C_Baby" ,"SE_C_Pregnancy" ,"SE_T_Baby" ,"SE_T_Pregnancy" ,"spillovers" ,"T3" ,"UNCAUGHT"]
-
-
 # Cliente io
 io_client = TembaClient('rapidpro.io',TOKEN_IO)
 #Cliente gob.mx
 mx_client = TembaClient('rapidpro.datos.gob.mx', TOKEN_MX)
 
+VARIABLES = [f.key for f in mx_client.get_fields().all()]
+VALID_GROUPS= [group.name for group in mx_client.get_groups().all()]
+
 app = FlaskAPI(__name__)
-
-
 
 
 def migrate_contact(uuid,flow=None):
@@ -61,6 +57,20 @@ def receive_uuid():
         flow = request.args.get('flow')  if request.args.get('flow') else None
         create_thread(uuid,flow)
         return jsonify({"ok":"ok"})
+
+
+@app.route("/search_contact",methods=['GET'])
+def search_contact():
+    """
+    List or create notes.
+    """
+    if request.method == 'GET':
+        tel = request.args.get('tel')
+        contact = io_client.get_contacts(urn=['tel:+52'+tel]).all()
+        if contact:
+            return jsonify({"existe":"Si"})
+        return jsonify({"existe":"No"})
+
 
 if __name__ == "__main__":
     #Cambiar ip a 0.0.0.0
