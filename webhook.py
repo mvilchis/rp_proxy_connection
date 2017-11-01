@@ -27,7 +27,15 @@ def migrate_contact(uuid,flow=None):
         fields_to_migrate = {}
         for var in VARIABLES:
             fields_to_migrate[var] = contact["fields"][var]
-        groups = [g["name"] for g in contact["groups"] if g["name"] in VALID_GROUPS]
+        #Now we 'll check if must change sufix tw to ow
+        groups = []
+        for g in contact["groups"]:
+            if g["name"][-2:] == "tw": #Change to one way
+                ow_name = g["name"][:-2]
+                ow_name += "ow"
+                groups+= [ow_name] if ow_name in VALID_GROUPS else []
+            else:
+                groups += [g["name"]] if g["name"] in VALID_GROUPS else []
         try:
             mx_contact = mx_client.create_contact( name = contact["name"],
                                                    urns = contact["urns"],
@@ -68,8 +76,8 @@ def search_contact():
         tel = request.args.get('tel')
         contact = io_client.get_contacts(urn=['tel:+52'+tel]).all()
         if contact:
-            return jsonify({"existe":"Si"})
-        return jsonify({"existe":"No"})
+            return jsonify({"existe":"Si"}),201
+        return jsonify({"existe":"No"}),404
 
 
 if __name__ == "__main__":
