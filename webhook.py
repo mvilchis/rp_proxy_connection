@@ -96,7 +96,7 @@ def cancel_subscription():
         if to_rp == "io":
             client = io_client
             group = "68e4077e-c794-4b76-9a61-afaa96180d36"
-        elif to_rp = "datos":
+        elif to_rp == "datos":
             client = mx_client
             group = "08353c98-0f6a-41b1-9958-485a22e8dd91"
         else:
