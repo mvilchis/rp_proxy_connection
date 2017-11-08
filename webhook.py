@@ -26,7 +26,7 @@ def migrate_contact(uuid,flow=None):
         contact = contacts[0].serialize()
         fields_to_migrate = {}
         for var in VARIABLES:
-            fields_to_migrate[var] = contact["fields"][var]
+            fields_to_migrate[var] = contact["fields"][var] if var in contact["fields"] else ""
         #Now we 'll check if must change sufix tw to ow
         groups = []
         for g in contact["groups"]:
@@ -55,6 +55,7 @@ def create_thread(uuid,flow=None):
     thread.start()
     return
 
+
 @app.route("/", methods=['GET', 'POST'])
 def receive_uuid():
     """
@@ -78,6 +79,34 @@ def search_contact():
         if contact:
             return jsonify({"existe":"Si"}),201
         return jsonify({"existe":"No"}),404
+
+
+@app.route("/cancel",methods=['GET'])
+def cancel_subscription():
+    """
+    Remove contact from all groups and
+    add it to altopd
+    parameters:
+        tel: celnumber of contact
+        to: site to remove from group
+    """
+    if request.method == 'GET':
+        tel = request.args.get('tel')
+        to_rp = request.args.get('to')
+        if to_rp == "io":
+            client = io_client
+            group = "68e4077e-c794-4b76-9a61-afaa96180d36"
+        elif to_rp = "datos":
+            client = mx_client
+            group = "08353c98-0f6a-41b1-9958-485a22e8dd91"
+        else:
+            return jsonify({}),404
+        contact = client.get_contacts(urn=['tel:+52'+tel]).all()
+        if contact:
+            client.update_contact(contact=contact, groups=[group])
+            return jsonify({}),201
+        return jsonify({}),404
+
 
 
 if __name__ == "__main__":
