@@ -20,52 +20,93 @@ VALID_GROUPS= [group.name for group in mx_client.get_groups().all()]
 app = FlaskAPI(__name__)
 
 
-def migrate_contact(uuid,flow=None):
-    contacts = io_client.get_contacts(uuid=uuid).all()
+def migrate_contact(tel, flow=None, to=None):
+
+    if not to or to == "datos":
+        origin_client = io_client
+        dest_client = mx_client
+        group_sufix = "_ow"
+        old_sufix = "tw"
+    if to == "io":
+        origin_client = mx_client
+        dest_client = io_client
+        group_sufix = "_tw"
+        old_sufix = "ow"
+
+    contacts = origin_client.get_contacts(urn=['tel:+52'+tel]).all()
     if contacts:
         contact = contacts[0].serialize()
+        uuid = contact["uuid"]
         fields_to_migrate = {}
         for var in VARIABLES:
             fields_to_migrate[var] = contact["fields"][var] if var in contact["fields"] else ""
+
+
         #Now we 'll check if must change sufix tw to ow
         groups = []
         for g in contact["groups"]:
-            if g["name"][-2:] == "tw": #Change to one way
+            if g["name"][-2:] == old_sufix: #Change to one way
                 ow_name = g["name"][:-2]
-                ow_name += "ow"
+                ow_name += group_sufix
                 groups+= [ow_name] if ow_name in VALID_GROUPS else []
             else:
                 groups += [g["name"]] if g["name"] in VALID_GROUPS else []
         try:
-            mx_contact = mx_client.create_contact( name = contact["name"],
+            new_contact = dest_client.create_contact( name = contact["name"],
                                                    urns = contact["urns"],
                                                    fields = fields_to_migrate,
                                                    groups = groups
                                                   )
         except:
-            mx_contacts = mx_client.get_contacts(urn=contact["urns"]).all()
-            if mx_contacts:
-                mx_contact = mx_contacts[0]
+            new_contacts = dest_client.get_contacts(urn=contact["urns"]).all()
+            if to == "io" and new_contacts: #Then could exist but without variables
+                new_contact = new_contacts[0]
+                dest_client.update_contact(new_contact, name = contact["name"],
+                                                   urns = contact["urns"],
+                                                   fields = fields_to_migrate,
+                                                   groups = groups
+                                                  )
+            if new_contacts:
+                new_contact = new_contacts[0]
         if flow:
-            mx_client.create_flow_start(flow=flow, contacts=[mx_contact.uuid],)
+            dest_client.create_flow_start(flow=flow, contacts=[new_contact.uuid],)
 
 
-def create_thread(uuid,flow=None):
-    thread = Thread(target = migrate_contact, args = (uuid,flow ))
+def create_thread(tel,flow=None, to=None):
+    thread = Thread(target = migrate_contact, args = (tel,flow,to ))
     thread.start()
     return
 
 
+#######################    API METHODS   ##########################
+
 @app.route("/", methods=['GET', 'POST'])
 def receive_uuid():
     """
-    List or create notes.
+    Migrate a contact from datos to io and io to datos
+    Try to create the contact or update with the new values of variables
     """
     if request.method == 'GET':
-        uuid = request.args.get('uuid')
+        tel = request.args.get('tel')
         flow = request.args.get('flow')  if request.args.get('flow') else None
-        create_thread(uuid,flow)
+        to = request.args.get('to')  if request.args.get('to') else None
+        create_thread(tel,flow, to)
         return jsonify({"ok":"ok"})
+
+
+@app.route("/create_empty", methods=['GET', 'POST'])
+    """
+    Create an empty contact on io and add to unconfirmed group
+    """
+    if request.method == 'GET':
+        tel = request.args.get('tel')
+        try:
+            io_client.create_contact(urns =["tel:+52"+tel],
+                                     groups = ["cc9543a2-33ca-43cd-a3b7-4839b694605a"])
+            return jsonify({"creado":"Si"}),201
+        except:
+            pass
+        return jsonify({"creado":"No"}),404
 
 
 @app.route("/search_contact",methods=['GET'])
@@ -77,6 +118,28 @@ def search_contact():
         tel = request.args.get('tel')
         contact = io_client.get_contacts(urn=['tel:+52'+tel]).all()
         if contact:
+            return jsonify({"existe":"Si"}),201
+        return jsonify({"existe":"No"}),404
+
+
+@app.route("/start_flow",methods=['GET'])
+def start_flow():
+    """
+    List or create notes.
+    """
+    if request.method == 'GET':
+        tel = request.args.get('tel')
+        flow = request.args.get('flow')
+        to_rp = request.args.get('to')
+        if to == "io":
+            client = io_client
+        if to == "datos":
+            client = mx_client
+        else:
+            return jsonify({}),404
+        contact = client.get_contacts(urn=['tel:+52'+tel]).all()
+        if contact:
+            client.create_flow_start(flow=flow, contacts=[contact],)
             return jsonify({"existe":"Si"}),201
         return jsonify({"existe":"No"}),404
 
