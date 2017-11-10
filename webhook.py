@@ -14,8 +14,10 @@ io_client = TembaClient('rapidpro.io',TOKEN_IO)
 #Cliente gob.mx
 mx_client = TembaClient('rapidpro.datos.gob.mx', TOKEN_MX)
 
-VARIABLES = [f.key for f in mx_client.get_fields().all()]
-VALID_GROUPS= [group.name for group in mx_client.get_groups().all()]
+VARIABLES_MX = [f.key for f in mx_client.get_fields().all()]
+VARIABLES_IO = [f.key for f in io_client.get_fields().all()]
+VALID_GROUPS_MX= [group.name for group in mx_client.get_groups().all()]
+VALID_GROUPS_IO= [group.name for group in io_client.get_groups().all()]
 
 app = FlaskAPI(__name__)
 
@@ -27,11 +29,15 @@ def migrate_contact(tel, flow=None, to=None):
         dest_client = mx_client
         group_sufix = "_ow"
         old_sufix = "tw"
+        VALID_GROUPS = VALID_GROUPS_MX
+        VARIABLES  = VARIABLES_MX
     if to == "io":
         origin_client = mx_client
         dest_client = io_client
         group_sufix = "_tw"
         old_sufix = "ow"
+        VALID_GROUPS = VALID_GROUPS_IO
+        VARIABLES = VARIABLES_IO
 
     contacts = origin_client.get_contacts(urn=['tel:+52'+tel]).all()
     if contacts:
@@ -39,7 +45,8 @@ def migrate_contact(tel, flow=None, to=None):
         uuid = contact["uuid"]
         fields_to_migrate = {}
         for var in VARIABLES:
-            fields_to_migrate[var] = contact["fields"][var] if var in contact["fields"] else ""
+            if var in contact["fields"]:
+                fields_to_migrate[var] = contact["fields"][var]
 
 
         #Now we 'll check if must change sufix tw to ow
@@ -95,6 +102,7 @@ def receive_uuid():
 
 
 @app.route("/create_empty", methods=['GET', 'POST'])
+def create_empty_contact():
     """
     Create an empty contact on io and add to unconfirmed group
     """
@@ -131,17 +139,17 @@ def start_flow():
         tel = request.args.get('tel')
         flow = request.args.get('flow')
         to_rp = request.args.get('to')
-        if to == "io":
+        if to_rp == "io":
             client = io_client
-        if to == "datos":
+        elif to_rp == "datos":
             client = mx_client
         else:
             return jsonify({}),404
         contact = client.get_contacts(urn=['tel:+52'+tel]).all()
         if contact:
-            client.create_flow_start(flow=flow, contacts=[contact],)
-            return jsonify({"existe":"Si"}),201
-        return jsonify({"existe":"No"}),404
+            client.create_flow_start(flow=flow, contacts=[contact[0].uuid],)
+            return jsonify({"Inicio_flow":"Si"}),201
+        return jsonify({"Inicio_flow":"No"}),404
 
 
 @app.route("/cancel",methods=['GET'])
