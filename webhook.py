@@ -75,7 +75,12 @@ def migrate_contact(tel, flow=None, to=None):
                                                   )
             if new_contacts:
                 new_contact = new_contacts[0]
-        if flow:
+            else:
+                new_contact = ""
+        ### If we migrate then the campaigns must be updated
+        old_groups = [g["name"]for g in contact["groups"] if g["name"][-2:] != group_sufix]
+        origin_client.update_contact(contacts[0], groups = old_groups)
+        if flow and new_contact:
             dest_client.create_flow_start(flow=flow, contacts=[new_contact.uuid],)
 
 
