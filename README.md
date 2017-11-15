@@ -19,7 +19,7 @@ The webhook expose three directions:
   * _to_: site to remove from group (datos,io)
   > /cancel?tel=@contac.tel&to=io
   
-* _ **create_empty**_: Create new contact without variables and add it to _Unconfirmed_ group. Parameters:
+* _**create_empty**_: Create new contact without variables and add it to _Unconfirmed_ group. Parameters:
   * _tel_ :cellnumber of contact
   > /create_empty?tel=@contact.tel
   
