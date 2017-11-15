@@ -27,14 +27,14 @@ def migrate_contact(tel, flow=None, to=None):
     if not to or to == "datos":
         origin_client = io_client
         dest_client = mx_client
-        group_sufix = "_ow"
+        group_sufix = "ow"
         old_sufix = "tw"
         VALID_GROUPS = VALID_GROUPS_MX
         VARIABLES  = VARIABLES_MX
     if to == "io":
         origin_client = mx_client
         dest_client = io_client
-        group_sufix = "_tw"
+        group_sufix = "tw"
         old_sufix = "ow"
         VALID_GROUPS = VALID_GROUPS_IO
         VARIABLES = VARIABLES_IO
