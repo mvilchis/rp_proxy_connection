@@ -106,6 +106,33 @@ def receive_uuid():
         return jsonify({"ok":"ok"})
 
 
+@app.route("/migrate_fb", methods=['GET', 'POST'])
+def migrate_fb_contact():
+    """
+    Create an empty contact on io and add to unconfirmed group
+    """
+    if request.method == 'GET':
+        tel = request.args.get('tel')
+        uuid = request.args.get('uuid')
+        #try:
+        if True:
+            phone_contact = mx_client.get_contacts(urn=['tel:+52'+tel]).all()
+            fb_contact = mx_client.get_contacts(uuid=uuid).all()
+            if phone_contact and fb_contact:
+                contact = phone_contact[0].serialize()
+                fields_to_migrate = {}
+                for var in VARIABLES_MX:
+                    if var in contact["fields"] and contact["fields"][var]:
+                        fields_to_migrate[var] = contact["fields"][var]
+                mx_client.update_contact(fb_contact[0],
+                                        fields =  fields_to_migrate,
+                                        groups = [g["name"]for g in contact["groups"]] )
+                return jsonify({"Migrado":"Si"}),201
+        #except:
+        #    pass
+        return jsonify({"Migrado":"No"}),404
+
+
 @app.route("/create_empty", methods=['GET', 'POST'])
 def create_empty_contact():
     """
