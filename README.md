@@ -19,17 +19,17 @@ The webhook expose three directions:
   * _to_: site to remove from group (datos,io)
   > /cancel?tel=@contac.tel&to=io
 
-* _**create_empty**_: Create new contact without variables and add it to _Unconfirmed_ group. Parameters:
+* _**/create_empty**_: Create new contact without variables and add it to _Unconfirmed_ group. Parameters:
   * _tel_ :cellnumber of contact
   > /create_empty?tel=@contact.tel
 
-* _**start_flow**_: Search a contact and begin a flow. Parameters:
+* _**/start_flow**_: Search a contact and begin a flow. Parameters:
   * _tel_ :cellnumber of contact
   * _to_: site to start flow  (datos,io)
   * _flow_ : Flow to run
   > /start_flow?tel=@contact.tel&to=datos&flow=flow_id
 
-* _**migrate_fb**_: Search a contact with phone number to migrate on fb contact. Parameters:
+* _**/migrate_fb**_: Search a contact with phone number to migrate on fb contact. Parameters:
     * _tel_ :cellnumber of contact
     * _uuid_: contact uuid
     > /migrate_fb?tel=@contact.tel&uuid=@contact.uuid
