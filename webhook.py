@@ -45,7 +45,7 @@ def migrate_contact(tel, flow=None, to=None):
         uuid = contact["uuid"]
         fields_to_migrate = {}
         for var in VARIABLES:
-            if var in contact["fields"]:
+            if var in contact["fields"] and contact["fields"][var]:
                 fields_to_migrate[var] = contact["fields"][var]
                 is_date = re.match(r'[0-9]{4}-[0-9]{2}-[0-9]{2}T',fields_to_migrate[var])
                 rare_format = re.match(r'-[0-9]{2}:[0-9]{2}',fields_to_migrate[var][-6:])
