@@ -1,7 +1,7 @@
 from flask import request, url_for
 from flask_api import FlaskAPI, status, exceptions
 import os
-import ast
+import ast,re
 from flask import jsonify
 from threading import Thread
 from temba_client.v2 import TembaClient
@@ -47,6 +47,11 @@ def migrate_contact(tel, flow=None, to=None):
         for var in VARIABLES:
             if var in contact["fields"]:
                 fields_to_migrate[var] = contact["fields"][var]
+                is_date = re.match(r'[0-9]{4}-[0-9]{2}-[0-9]{2}T',fields_to_migrate[var])
+                rare_format = re.match(r'-[0-9]{2}:[0-9]{2}',fields_to_migrate[var][-6:])
+                if is_date and rare_format:
+                    fields_to_migrate[var] = fields_to_migrate[var][:-6]
+
 
 
         #Now we 'll check if must change sufix tw to ow
