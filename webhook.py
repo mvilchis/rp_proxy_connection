@@ -94,6 +94,32 @@ def create_thread(tel,flow=None, to=None):
     thread.start()
     return
 
+def migrate_fb_task(phone_contact, uuid):
+    fb_contact = mx_client.get_contacts(uuid=uuid).all()
+    if phone_contact and fb_contact:
+        contact = phone_contact[0].serialize()
+        fields_to_migrate = {}
+        for var in VARIABLES_MX:
+            if var in contact["fields"] and contact["fields"][var]:
+                fields_to_migrate[var] = contact["fields"][var]
+        #Add to tw variables
+        groups = []
+        for g in contact["groups"]:
+             if g["name"][-2:] == "ow": #Add to two way
+                 ow_name = g["name"][:-2]
+                 ow_name += "tw"
+                 groups += [ow_name]
+                 groups += [g["name"]]
+             else:
+                 groups += [g["name"]]
+        mx_client.update_contact(fb_contact[0],
+                                 fields =  fields_to_migrate,
+                                 groups = [g["name"]for g in contact["groups"]] )
+
+def create_thread_fb(phone_contact, uuid):
+    thread = Thread(target = migrate_fb_task, args = (phone_contact,uuid))
+    thread.start()
+    return
 
 #######################    API METHODS   ##########################
 
@@ -119,22 +145,13 @@ def migrate_fb_contact():
     if request.method == 'GET':
         tel = request.args.get('tel')
         uuid = request.args.get('uuid')
-        #try:
-        if True:
+        try:
             phone_contact = mx_client.get_contacts(urn=['tel:+52'+tel]).all()
-            fb_contact = mx_client.get_contacts(uuid=uuid).all()
-            if phone_contact and fb_contact:
-                contact = phone_contact[0].serialize()
-                fields_to_migrate = {}
-                for var in VARIABLES_MX:
-                    if var in contact["fields"] and contact["fields"][var]:
-                        fields_to_migrate[var] = contact["fields"][var]
-                mx_client.update_contact(fb_contact[0],
-                                        fields =  fields_to_migrate,
-                                        groups = [g["name"]for g in contact["groups"]] )
+            if phone_contact:
+                create_thread_fb(phone_contact, uuid)
                 return jsonify({"Migrado":"Si"}),201
-        #except:
-        #    pass
+        except:
+            pass
         return jsonify({"Migrado":"No"}),404
 
 
