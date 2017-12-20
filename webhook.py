@@ -114,7 +114,7 @@ def migrate_fb_task(phone_contact, uuid):
                  groups += [g["name"]]
         mx_client.update_contact(fb_contact[0],
                                  fields =  fields_to_migrate,
-                                 groups = [g["name"]for g in contact["groups"]] )
+                                 groups = groups )
 
 def create_thread_fb(phone_contact, uuid):
     thread = Thread(target = migrate_fb_task, args = (phone_contact,uuid))
